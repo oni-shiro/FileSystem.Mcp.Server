@@ -44,4 +44,20 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Adds the BatchFileOperationService for efficient bulk file operations.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for fluent chaining.</returns>
+    /// <remarks>
+    /// Requires AddFileSystemService to be called first.
+    /// Provides token-efficient batch execution of multiple filesystem operations.
+    /// </remarks>
+    public static IServiceCollection AddBatchFileOperationService(
+        this IServiceCollection services)
+    {
+        services.AddSingleton<IBatchFileOperationService, BatchFileOperationService>();
+        return services;
+    }
 }
