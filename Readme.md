@@ -1,73 +1,446 @@
-# File System MCP server in C#
-This is a fully working mcp server written in C#, this is a pluggable MCP server that enables any other project or tool to use to expose file system operations to LLMs via mcp clients.
+# FileSystem MCP Server
 
-Right now it is STDIN type of server, I am currently working on adding the HTTP support to make it a remote server
+![.NET](https://img.shields.io/badge/.NET-8%2B-blue)
+![Protocol](https://img.shields.io/badge/Protocol-MCP-green)
+![License](https://img.shields.io/badge/license-MIT-purple)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey)
 
-## Features 🗃️
-This exposes basic File system I/0 operations as well as tools to run batch operations that will save token cost. This runs on a sandbox, basically server restricts access to any file or folder outside the given root folder. If not set it will be set as the current workspace of the server.
+A **Model Context Protocol (MCP) server written in C#** that exposes **filesystem operations as AI-accessible tools**.
 
-Otherwise it can be set via params in `dotnet` `run` 
- 
-or more suited if ran using the self-contained exe, is to set `MCP_ROOT_DIR` in environment variables. All paths should be a child of this parent directory otherwise the execution will be cancelled.
+This project demonstrates how to build a **fully functional MCP server** capable of handling tool discovery, execution, and batch workflows.
 
-For single file operations the requst JRPC is quite simple.
+It is designed for **AI agents, MCP clients, and developer automation systems**.
 
-So I will give an example of the batch processing below:
+---
 
-Let's say there are couple of files in the root directory(it can be in any other folders inside the root, I am taking files in only root for simplicity). Say the files are named as 1.txt,2.txt and so on. You want to do some operations on them, so the expected requested Json will be:
+# Overview
 
-```[
-  {
-    "id": "1",
-    "type": "read",
-    "path": "1.txt"
-  },
-  {
-    "id": "2",
-    "type": "read",
-    "path": "2.txt"
-  },
-  {
-    "id": "3",
-    "type": "write",
-    "path": "3.txt",
-    "dependsonoperationids": [
-      "2",
-      "4"
-    ],
-    "content": "File name is changed to 3.13"
-  },
-  {
-    "id": "4",
-    "type": "CopyFile",
-    "path": "2.txt",
-    "targetpath":".\\tmp_child\\2_copy.txt"
+The **Model Context Protocol (MCP)** allows AI systems to safely interact with external tools using a standardized interface.
+
+This server exposes **filesystem capabilities** to MCP clients such as:
+
+* VSCode MCP
+* Claude Desktop
+* Custom MCP clients
+* AI agents
+
+The server translates **JSON-RPC MCP requests** into **filesystem operations**.
+
+---
+
+# Architecture
+
+```
+                    MCP Client
+             (VSCode / Claude / CLI)
+                         │
+                         │ JSON-RPC
+                         ▼
+                FileSystem MCP Server
+                         │
+                         │ Tool Dispatcher
+                         ▼
+                 Filesystem Tool Layer
+                         │
+                         ▼
+                    Local Filesystem
+```
+
+Current Transport:
+
+```
+STDIN / STDOUT
+```
+
+Planned Transport:
+
+```
+HTTP
+```
+
+---
+
+# Features
+
+## MCP Protocol Implementation
+
+This server implements the core MCP lifecycle methods:
+
+| Method       | Description                                     |
+| ------------ | ----------------------------------------------- |
+| `initialize` | Establish connection and negotiate capabilities |
+| `tools/list` | Discover available tools                        |
+| `tools/call` | Execute tool operations                         |
+
+---
+
+## Filesystem Tools
+
+The server exposes filesystem operations as MCP tools.
+
+Example capabilities:
+
+* Read files
+* Write files
+* List directories
+* Batch filesystem operations
+
+These tools allow AI systems to interact with the local filesystem in a structured and controlled way.
+
+---
+
+## Batch Processing
+
+The server supports executing **multiple tool operations in a single request**.
+
+Example workflow:
+
+```
+Create file
+Write content
+Read file
+Delete file
+```
+
+All within **one MCP call**.
+
+---
+
+## Dependency Graph Execution
+
+Batch operations can depend on previous operations.
+
+Example dependency chain:
+
+```
+Operation A
+   │
+   ▼
+Operation B
+   │
+   ▼
+Operation C
+```
+
+The server builds a **dependency graph** and executes operations in the correct order.
+
+---
+
+## Cycle Detection
+
+The batch processor prevents invalid dependency graphs.
+
+Example invalid dependency:
+
+```
+A -> B -> C -> A
+```
+
+If a cycle is detected, the request is rejected.
+
+---
+
+## STDIO Transport
+
+The server currently communicates using **STDIO transport**.
+
+```
+Client
+   │
+stdin/stdout JSON-RPC
+   ▼
+MCP Server
+```
+
+Advantages of STDIO transport:
+
+* Fast
+* Secure
+* Process isolated
+* Simple integration
+
+Compatible with:
+
+* VSCode MCP
+* Claude Desktop
+* Custom MCP clients
+
+---
+
+# Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/oni-shiro/FileSystem.Mcp.Server.git
+```
+
+Build the project:
+
+```bash
+dotnet build
+```
+
+Publish a standalone executable:
+
+```bash
+dotnet publish -c Release -r win-x64 --self-contained
+```
+
+Output binary:
+
+```
+FileSystem.Mcp.Server.exe
+```
+
+---
+
+# Running the Server
+
+Run the executable:
+
+```bash
+FileSystem.Mcp.Server.exe
+```
+
+The server will start listening for **JSON-RPC requests on stdin**.
+
+---
+
+# MCP Request Examples
+
+## Initialize
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize"
+}
+```
+
+---
+
+## List Available Tools
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/list"
+}
+```
+
+---
+
+## Call a Tool
+
+Example file read request:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "read_file",
+    "arguments": {
+      "path": "example.txt"
+    }
   }
-]
+}
 ```
 
-Here we are defining the operationId, type of operation(basically calls the single file opertions), path to the file, and r`quired params,
-Like for copy we need the `targetPath`, for writing in file we need the `content`.
+---
 
-I would like to draw your attention to the `dependsonoperationids` param. It basically stores the dependencies for that operation to complete. Here I am using BFS to detect cyle and creat the ordered list of exectution. If any depenncy loop is detected, it will throw an error. 
+# Batch Execution Example
 
-[Rest of the readme will be added later, I would prefer to use ai to write it to negate manual labour💀]
+Example batch request:
 
-
-## How to run it using vscode
-Adding the below section in your global/workspace mcp.json should work:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 10,
+  "method": "tools/call",
+  "params": {
+    "name": "batch",
+    "arguments": {
+      "operations": [
+        {
+          "id": "1",
+          "tool": "write_file",
+          "args": {
+            "path": "file.txt",
+            "content": "Hello MCP"
+          }
+        },
+        {
+          "id": "2",
+          "tool": "read_file",
+          "dependsOnOperationId": "1",
+          "args": {
+            "path": "file.txt"
+          }
+        }
+      ]
+    }
+  }
+}
 ```
-		"filesystem-mcp-server6f2add0c": {
-			"type": "stdio",
-			"command": "dotnet",
-			"args": [
-				"run",
-				"--project",
-				"<absolute-path-to-project>\\FileSystem.Mcp.Server.csproj"
-			],
-			"env": {
-				"MCP_ROOT_DIR": "<root-dir>"
-			}
-		}
 
-```  
+Execution order:
+
+```
+write_file
+    │
+    ▼
+read_file
+```
+
+---
+
+# VSCode MCP Integration
+
+Add the server to your MCP configuration.
+
+Example:
+
+`.vscode/mcp.json`
+
+```json
+{
+  "servers": {
+    "filesystem": {
+      "command": "path/to/FileSystem.Mcp.Server.exe"
+    }
+  }
+}
+```
+
+VSCode will automatically launch the server and communicate via STDIO.
+
+---
+
+# Testing From CLI
+
+You can manually send requests using the console.
+
+Example:
+
+```powershell
+'{"jsonrpc":"2.0","id":1,"method":"initialize"}' | .\FileSystem.Mcp.Server.exe
+```
+
+---
+
+# Project Structure
+
+```
+FileSystem.Mcp.Server
+│
+├── Tools
+│   ├── ReadFileTool
+│   ├── WriteFileTool
+│   └── ListDirectoryTool
+│
+├── BatchProcessing
+│   ├── BatchProcessor
+│   └── DependencyResolver
+│
+├── MCP Protocol
+│   ├── RequestHandlers
+│   └── ResponseModels
+│
+└── Transport
+    └── StdioTransport
+```
+
+---
+
+# Design Goals
+
+This project focuses on:
+
+* Clean architecture
+* Protocol correctness
+* Extensibility
+* Safe filesystem interaction
+* MCP compatibility
+
+---
+
+# Roadmap
+
+Planned improvements:
+
+## HTTP Transport
+
+Allow remote MCP clients to connect via HTTP.
+
+```
+client -> HTTP -> MCP server
+```
+
+---
+
+## Parallel Batch Execution
+
+Support DAG-based execution where independent operations run in parallel.
+
+---
+
+## Streaming Tool Responses
+
+Enable streaming tools for operations such as:
+
+* tail file
+* log streaming
+* directory watching
+
+---
+
+## Security Sandbox
+
+Restrict filesystem access to configured directories.
+
+---
+
+## Observability
+
+Add logging, metrics, and tracing.
+
+---
+
+# Contributing
+
+Contributions are welcome.
+
+Steps:
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
+
+---
+
+# License
+
+MIT License
+
+---
+
+# About MCP
+
+The **Model Context Protocol (MCP)** allows AI systems to interact with external tools through a standardized protocol.
+
+It enables AI assistants to **discover, call, and orchestrate tools dynamically**.
+
+Learn more:
+
+https://modelcontextprotocol.io
+
+---
+
+# Author
+
+Readme generated by AI. Need to proof read and edit.
