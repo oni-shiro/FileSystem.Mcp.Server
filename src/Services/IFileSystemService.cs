@@ -47,11 +47,6 @@ public interface IFileSystemService
     void MoveFile(string sourcePath, string destinationPath);
 
     /// <summary>
-    /// Lists all files and directories in the specified path.
-    /// </summary>
-    List<string> ListDirectoriesAndFiles(string path);
-
-    /// <summary>
     /// Recursively loads the entire directory structure from the specified path.
     /// Returns a dictionary with full hierarchy information.
     /// </summary>
