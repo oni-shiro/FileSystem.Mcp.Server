@@ -1,4 +1,5 @@
 using FileSystem.Mcp.Server.Services;
+using FileSystem.Mcp.Server.Utils;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FileSystem.Mcp.Server.Extensions;
@@ -42,6 +43,28 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IFileSystemService>(provider =>
             provider.GetRequiredService<FileSystemService>());
 
+        return services;
+    }
+
+    /// <summary>
+    /// Adds the BatchFileOperationService for efficient bulk file operations.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for fluent chaining.</returns>
+    /// <remarks>
+    /// Requires AddFileSystemService to be called first.
+    /// Provides token-efficient batch execution of multiple filesystem operations.
+    /// </remarks>
+    public static IServiceCollection AddBatchFileOperationService(
+        this IServiceCollection services)
+    {
+        services.AddSingleton<IBatchFileOperationService, BatchFileOperationService>();
+        return services;
+    }
+
+    public static IServiceCollection AddUtilities(this IServiceCollection services)
+    {
+        services.AddSingleton<ExecutionOrderUtil>();
         return services;
     }
 }
