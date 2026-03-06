@@ -36,8 +36,8 @@ public record BatchOperation
     public string? Content { get; init; }
 
     /// <summary>
-    /// Optional ID of another operation this one depends on.
+    /// Optional List<ID> of other operations this one depends on.
     /// Ensures ordering within the batch.
     /// </summary>
-    public string? DependsOnOperationId { get; init; }
+    public List<string>? DependsOnOperationIds { get; init; }
 }

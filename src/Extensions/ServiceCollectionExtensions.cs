@@ -1,4 +1,5 @@
 using FileSystem.Mcp.Server.Services;
+using FileSystem.Mcp.Server.Utils;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FileSystem.Mcp.Server.Extensions;
@@ -58,6 +59,12 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services)
     {
         services.AddSingleton<IBatchFileOperationService, BatchFileOperationService>();
+        return services;
+    }
+
+    public static IServiceCollection AddUtilities(this IServiceCollection services)
+    {
+        services.AddSingleton<ExecutionOrderUtil>();
         return services;
     }
 }

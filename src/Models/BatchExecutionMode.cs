@@ -16,10 +16,4 @@ public enum BatchExecutionMode
     /// All results are collected and returned with error information.
     /// </summary>
     ContinueOnError,
-    
-    /// <summary>
-    /// Execute operations atomically - all succeed or all fail.
-    /// Uses file staging and rollback for consistency.
-    /// </summary>
-    Transactional
 }

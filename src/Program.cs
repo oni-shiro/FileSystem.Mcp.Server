@@ -13,6 +13,7 @@ builder.Logging.AddConsole(config => config.LogToStandardErrorThreshold = LogLev
 string? rootDirectoryArg = args.Length > 0 ? args[0] : null;
 builder.Services.AddFileSystemService(rootDirectoryArg);
 builder.Services.AddBatchFileOperationService();
+builder.Services.AddUtilities();
 
 builder.Services
     .AddMcpServer()

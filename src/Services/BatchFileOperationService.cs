@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using FileSystem.Mcp.Server.Exceptions;
 using FileSystem.Mcp.Server.Models;
+using FileSystem.Mcp.Server.Utils;
 
 namespace FileSystem.Mcp.Server.Services;
 
@@ -10,10 +11,13 @@ namespace FileSystem.Mcp.Server.Services;
 public class BatchFileOperationService : IBatchFileOperationService
 {
     private readonly IFileSystemService _fileSystemService;
+    private readonly ExecutionOrderUtil _executionOrderUtil;
 
-    public BatchFileOperationService(IFileSystemService fileSystemService)
+    public BatchFileOperationService(IFileSystemService fileSystemService,
+        ExecutionOrderUtil executionOrderUtil)
     {
         _fileSystemService = fileSystemService ?? throw new ArgumentNullException(nameof(fileSystemService));
+        _executionOrderUtil = executionOrderUtil ?? throw new ArgumentNullException(nameof(executionOrderUtil));
     }
 
     public async Task<BatchExecutionResult> ExecuteBatchAsync(
@@ -40,7 +44,8 @@ public class BatchFileOperationService : IBatchFileOperationService
 
         // Build dependency graph for ordering
         var operationDict = operationList.ToDictionary(op => op.Id);
-        var executionOrder = GetExecutionOrder(operationList);
+        var executionOrder = _executionOrderUtil.SortOperationsByDependencies(operationList);
+        Console.WriteLine($"Execution order: {string.Join(", ", executionOrder)}");
 
         foreach (var operationId in executionOrder)
         {
@@ -160,10 +165,10 @@ public class BatchFileOperationService : IBatchFileOperationService
         var validIds = new HashSet<string>(ids);
         foreach (var operation in operationList)
         {
-            if (!string.IsNullOrEmpty(operation.DependsOnOperationId) &&
-                !validIds.Contains(operation.DependsOnOperationId))
+            if (operation.DependsOnOperationIds != null &&
+                !operation.DependsOnOperationIds.All(depId => validIds.Contains(depId)))
             {
-                errors.Add($"Operation '{operation.Id}' depends on non-existent operation '{operation.DependsOnOperationId}'");
+                errors.Add($"Operation '{operation.Id}' depends on non-existent operation '{operation.DependsOnOperationIds}'");
             }
         }
 
@@ -301,49 +306,5 @@ public class BatchFileOperationService : IBatchFileOperationService
     {
         var fullPath = Path.GetFullPath(operation.Path, _fileSystemService.RootDirectory);
         return Directory.Exists(fullPath);
-    }
-
-    /// <summary>
-    /// Determines the execution order of operations based on dependencies.
-    /// </summary>
-    private List<string> GetExecutionOrder(List<BatchOperation> operations)
-    {
-        var order = new List<string>();
-        var visited = new HashSet<string>();
-        var operationDict = operations.ToDictionary(op => op.Id);
-
-        foreach (var operation in operations)
-        {
-            if (!visited.Contains(operation.Id))
-            {
-                VisitOperation(operation, visited, order, operationDict);
-            }
-        }
-
-        return order;
-    }
-
-    /// <summary>
-    /// Recursively visits operations to build correct execution order (DFS).
-    /// </summary>
-    private void VisitOperation(
-        BatchOperation operation,
-        HashSet<string> visited,
-        List<string> order,
-        Dictionary<string, BatchOperation> operationDict)
-    {
-        if (visited.Contains(operation.Id))
-            return;
-
-        visited.Add(operation.Id);
-
-        // Visit dependent operation first
-        if (!string.IsNullOrEmpty(operation.DependsOnOperationId) &&
-            operationDict.TryGetValue(operation.DependsOnOperationId, out var dependency))
-        {
-            VisitOperation(dependency, visited, order, operationDict);
-        }
-
-        order.Add(operation.Id);
     }
 }

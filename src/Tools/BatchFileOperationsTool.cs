@@ -254,8 +254,8 @@ public class BatchFileOperationsTool
             ? cElement.GetString() 
             : null;
 
-        var dependsOn = obj.TryGetValue("dependsonoperationid", out var depElement) && depElement.ValueKind == JsonValueKind.String 
-            ? depElement.GetString() 
+        var dependsOn = obj.TryGetValue("dependsonoperationids", out var depElement) && depElement.ValueKind == JsonValueKind.Array
+            ? depElement.EnumerateArray().Where(e => e.ValueKind == JsonValueKind.String).Select(e => e.GetString()!).ToList() 
             : null;
 
         return new BatchOperation
@@ -265,7 +265,7 @@ public class BatchFileOperationsTool
             Path = path,
             TargetPath = targetPath,
             Content = content,
-            DependsOnOperationId = dependsOn
+            DependsOnOperationIds = dependsOn
         };
     }
 
