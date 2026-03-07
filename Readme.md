@@ -4,6 +4,8 @@
 ![Protocol](https://img.shields.io/badge/Protocol-MCP-green)
 ![License](https://img.shields.io/badge/license-MIT-purple)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey)
+![Commits](https://badgen.net/github/commits/micromatch/micromatch)
+
 
 A **Model Context Protocol (MCP) server written in C#** that exposes **filesystem operations as AI-accessible tools**.
 
