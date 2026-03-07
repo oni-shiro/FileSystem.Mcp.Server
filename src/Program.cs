@@ -10,7 +10,10 @@ using FileSystem.Mcp.Server.Services;
 var builder = Host.CreateApplicationBuilder(args);
 builder.Logging.AddConsole(config => config.LogToStandardErrorThreshold = LogLevel.Information);
 
-builder.Configuration.AddJsonFile("config.json", optional: true, reloadOnChange: true);
+builder
+.Configuration
+.SetBasePath(AppContext.BaseDirectory)
+.AddJsonFile("config.json", optional: true, reloadOnChange: true);
 
 builder.Services.Configure<AppConfig>(builder.Configuration);
 
