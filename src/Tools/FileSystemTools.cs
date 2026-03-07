@@ -9,13 +9,16 @@ namespace FileSystem.Mcp.Server.Tools;
 /// All operations are validated to prevent directory traversal attacks.
 /// </summary>
 [McpServerToolType]
-public class FileSystemTools
+internal class FileSystemTools
 {
-    private readonly FileSystemService _fileSystemService;
+    private readonly IFileSystemService _fileSystemService;
+    private readonly RootProvider  _rootProvider;
 
-    public FileSystemTools(FileSystemService fileSystemService)
+    public FileSystemTools(IFileSystemService fileSystemService, RootProvider rootProvider)
     {
         _fileSystemService = fileSystemService ?? throw new ArgumentNullException(nameof(fileSystemService));
+        _rootProvider = rootProvider ?? throw new ArgumentNullException(nameof(rootProvider));
+        Console.WriteLine($"FileSystemTools initialized with root directory: {_rootProvider.RootPath}");
     }
 
     [McpServerTool]
@@ -24,23 +27,9 @@ public class FileSystemTools
     {
         return new Dictionary<string, string>
         {
-            { "rootDirectory", _fileSystemService.RootDirectory },
+            { "rootDirectory", _rootProvider.RootPath },
             { "description", "All file operations are restricted to this directory and its subdirectories." }
         };
-    }
-
-    [McpServerTool]
-    [Description("Requests to change the root directory. Validates the new path exists and is accessible, then provides instructions for the user to restart the server with the new root.")]
-    public Dictionary<string, object> RequestRootDirectoryChange([Description("The new root directory path to change to.")] string newRootPath)
-    {
-        return _fileSystemService.ValidateRootDirectoryChange(newRootPath);
-    }
-
-    [McpServerTool]
-    [Description("Gets the complete directory structure starting from the root or specified path. Returns all files and subdirectories with full hierarchy.")]
-    public Dictionary<string, object> GetDirectoryStructure([Description("Optional path relative to root. If empty, returns the entire root structure.")] string path = "")
-    {
-        return _fileSystemService.LoadDirectoryStructure(path);
     }
 
     [McpServerTool]

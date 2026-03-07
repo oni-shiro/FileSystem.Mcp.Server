@@ -1,3 +1,4 @@
+using FileSystem.Mcp.Server.Resolver;
 using FileSystem.Mcp.Server.Services;
 using FileSystem.Mcp.Server.Utils;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,39 +10,12 @@ namespace FileSystem.Mcp.Server.Extensions;
 /// </summary>
 public static class ServiceCollectionExtensions
 {
-    /// <summary>
-    /// Adds the FileSystemService with a configurable root directory.
-    /// </summary>
-    /// <param name="services">The service collection.</param>
-    /// <param name="rootDirectory">The root directory for filesystem operations. 
-    /// If not provided, uses environment variable MCP_ROOT_DIR or current directory.</param>
-    /// <returns>The service collection for fluent chaining.</returns>
-    /// <exception cref="ArgumentException">Thrown when root directory is invalid or inaccessible.</exception>
     public static IServiceCollection AddFileSystemService(
-        this IServiceCollection services,
-        string? rootDirectory = null)
+        this IServiceCollection services)
     {
-        // Resolve the root directory from provided argument, environment variable, or current directory
-        string resolvedRootDirectory = rootDirectory
-            ?? Environment.GetEnvironmentVariable("MCP_ROOT_DIR")
-            ?? Directory.GetCurrentDirectory();
-
-        // Normalize the path
-        resolvedRootDirectory = Path.GetFullPath(resolvedRootDirectory);
-
-        // Validate directory exists
-        if (!Directory.Exists(resolvedRootDirectory))
-            throw new DirectoryNotFoundException(
-                $"The root directory '{resolvedRootDirectory}' does not exist.");
-
-        // Log to stderr for debugging
-        Console.Error.WriteLine(
-            $"FileSystem MCP Server initialized with root directory: {resolvedRootDirectory}");
-
-        // Register as singleton
-        services.AddSingleton(new FileSystemService(resolvedRootDirectory));
-        services.AddSingleton<IFileSystemService>(provider =>
-            provider.GetRequiredService<FileSystemService>());
+        services.AddSingleton<RootPathResolver>();
+        services.AddSingleton<RootProvider>();
+        services.AddSingleton<IFileSystemService, FileSystemService>();
 
         return services;
     }

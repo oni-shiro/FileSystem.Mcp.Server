@@ -2,16 +2,19 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using FileSystem.Mcp.Server.Extensions;
+using Microsoft.Extensions.Configuration;
+using FileSystem.Mcp.Server.Configuration;
+using FileSystem.Mcp.Server.Tools;
+using FileSystem.Mcp.Server.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.Logging.AddConsole(config => config.LogToStandardErrorThreshold = LogLevel.Error);
+builder.Logging.AddConsole(config => config.LogToStandardErrorThreshold = LogLevel.Information);
 
-// Add the filesystem service with root directory resolution priority:
-// 1. Command-line argument (if provided)
-// 2. MCP_ROOT_DIR environment variable (if set)
-// 3. Current working directory (default)
-string? rootDirectoryArg = args.Length > 0 ? args[0] : null;
-builder.Services.AddFileSystemService(rootDirectoryArg);
+builder.Configuration.AddJsonFile("config.json", optional: true, reloadOnChange: true);
+
+builder.Services.Configure<AppConfig>(builder.Configuration);
+
+builder.Services.AddFileSystemService();
 builder.Services.AddBatchFileOperationService();
 builder.Services.AddUtilities();
 
@@ -21,4 +24,5 @@ builder.Services
     .WithToolsFromAssembly();
 
 var app = builder.Build();
+
 await app.RunAsync();
