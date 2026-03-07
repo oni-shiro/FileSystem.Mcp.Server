@@ -2,22 +2,27 @@ using System.Diagnostics;
 using FileSystem.Mcp.Server.Exceptions;
 using FileSystem.Mcp.Server.Models;
 using FileSystem.Mcp.Server.Utils;
+using ModelContextProtocol.Protocol;
 
 namespace FileSystem.Mcp.Server.Services;
 
 /// <summary>
 /// Implements batch filesystem operations with support for different execution modes.
 /// </summary>
-public class BatchFileOperationService : IBatchFileOperationService
+internal class BatchFileOperationService : IBatchFileOperationService
 {
     private readonly IFileSystemService _fileSystemService;
     private readonly ExecutionOrderUtil _executionOrderUtil;
+    private readonly RootProvider _rootProvider;
 
-    public BatchFileOperationService(IFileSystemService fileSystemService,
-        ExecutionOrderUtil executionOrderUtil)
+    public BatchFileOperationService(
+        IFileSystemService fileSystemService,
+        ExecutionOrderUtil executionOrderUtil,
+        RootProvider rootProvider)
     {
         _fileSystemService = fileSystemService ?? throw new ArgumentNullException(nameof(fileSystemService));
         _executionOrderUtil = executionOrderUtil ?? throw new ArgumentNullException(nameof(executionOrderUtil));
+        _rootProvider = rootProvider ?? throw new ArgumentNullException(nameof(rootProvider));
     }
 
     public async Task<BatchExecutionResult> ExecuteBatchAsync(
@@ -223,7 +228,6 @@ public class BatchFileOperationService : IBatchFileOperationService
                     BatchOperationType.DeleteDirectory => ExecuteDeleteDirectory(operation),
                     BatchOperationType.CopyFile => ExecuteCopyFile(operation),
                     BatchOperationType.MoveFile => ExecuteMoveFile(operation),
-                    BatchOperationType.GetDirectoryStructure => ExecuteGetDirectoryStructure(operation),
                     BatchOperationType.FileExists => ExecuteFileExists(operation),
                     BatchOperationType.DirectoryExists => ExecuteDirectoryExists(operation),
                     _ => throw new InvalidOperationException($"Unknown operation type: {operation.Type}")
@@ -290,21 +294,15 @@ public class BatchFileOperationService : IBatchFileOperationService
         _fileSystemService.MoveFile(operation.Path, operation.TargetPath!);
         return null;
     }
-
-    private object? ExecuteGetDirectoryStructure(BatchOperation operation)
-    {
-        return _fileSystemService.LoadDirectoryStructure(operation.Path);
-    }
-
     private object? ExecuteFileExists(BatchOperation operation)
     {
-        var fullPath = Path.GetFullPath(operation.Path, _fileSystemService.RootDirectory);
+        var fullPath = _rootProvider.Resolve(operation.Path);
         return File.Exists(fullPath);
     }
 
     private object? ExecuteDirectoryExists(BatchOperation operation)
     {
-        var fullPath = Path.GetFullPath(operation.Path, _fileSystemService.RootDirectory);
+        var fullPath = _rootProvider.Resolve(operation.Path);
         return Directory.Exists(fullPath);
     }
 }

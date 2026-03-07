@@ -7,11 +7,6 @@ namespace FileSystem.Mcp.Server.Services;
 public interface IFileSystemService
 {
     /// <summary>
-    /// Gets the current root directory.
-    /// </summary>
-    string RootDirectory { get; }
-
-    /// <summary>
     /// Reads the content of a file.
     /// </summary>
     string ReadFile(string path);
@@ -45,16 +40,4 @@ public interface IFileSystemService
     /// Moves a file from source to destination.
     /// </summary>
     void MoveFile(string sourcePath, string destinationPath);
-
-    /// <summary>
-    /// Recursively loads the entire directory structure from the specified path.
-    /// Returns a dictionary with full hierarchy information.
-    /// </summary>
-    Dictionary<string, object> LoadDirectoryStructure(string path = "");
-
-    /// <summary>
-    /// Validates that a path exists and is accessible as a potential root directory.
-    /// Returns validation result with details and instructions for the user.
-    /// </summary>
-    Dictionary<string, object> ValidateRootDirectoryChange(string proposedPath);
 }
