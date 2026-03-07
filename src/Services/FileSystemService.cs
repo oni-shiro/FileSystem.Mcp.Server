@@ -1,3 +1,5 @@
+using FileSystem.Mcp.Server.Models;
+
 namespace FileSystem.Mcp.Server.Services;
 
 internal class FileSystemService : IFileSystemService
@@ -86,5 +88,40 @@ internal class FileSystemService : IFileSystemService
             Directory.CreateDirectory(destDirectory);
 
         File.Move(validatedSourcePath, validatedDestPath, overwrite: true);
+    }
+
+    public DirectoryNode BuildDirectoryMap(string path, int depth = 10)
+    {
+        DirectoryInfo rootDirInfo = new DirectoryInfo(_rootProvider.Resolve(path));
+        DirectoryNode rootNode = new DirectoryNode
+        {
+            Path = rootDirInfo.FullName,
+            Children = new List<DirectoryNode>(),
+            Files = new List<FileNode>(),
+            LastModified = rootDirInfo.LastWriteTimeUtc
+        };
+
+        foreach (var file in rootDirInfo.GetFiles())
+        {
+            rootNode.Files.Add(new FileNode
+            {
+                Name = file.Name,
+                RelativePath = Path.GetRelativePath(_rootProvider.RootPath, file.FullName),
+                Size = file.Length,
+                Extension = file.Extension,
+                LastModified = file.LastWriteTimeUtc,
+                IsReadonly = file.IsReadOnly
+            });
+        }
+
+        foreach(var dir in rootDirInfo.GetDirectories())
+        {
+            if (depth > 0)
+            {
+                rootNode.Children.Add(BuildDirectoryMap(Path.GetRelativePath(_rootProvider.RootPath, dir.FullName), depth - 1));
+            }
+        }
+        
+        return rootNode;
     }
 }
