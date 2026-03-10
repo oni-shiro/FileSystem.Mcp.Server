@@ -1,4 +1,4 @@
-using FileSystem.Mcp.Server.Resolver;
+using FileSystem.Mcp.Server.Resources;
 using FileSystem.Mcp.Server.Services;
 using FileSystem.Mcp.Server.Utils;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,9 +13,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddFileSystemService(
         this IServiceCollection services)
     {
-        services.AddSingleton<RootPathResolver>();
         services.AddSingleton<RootProvider>();
         services.AddSingleton<IFileSystemService, FileSystemService>();
+        services.AddSingleton<IFileReader, PdfReader>();
 
         return services;
     }
@@ -39,6 +39,12 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddUtilities(this IServiceCollection services)
     {
         services.AddSingleton<ExecutionOrderUtil>();
+        return services;
+    }
+
+    public static IServiceCollection AddMcpResources(this IServiceCollection services)
+    {
+        services.AddSingleton<FileSystemResource>();
         return services;
     }
 }

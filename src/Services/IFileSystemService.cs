@@ -1,3 +1,5 @@
+using FileSystem.Mcp.Server.Models;
+
 namespace FileSystem.Mcp.Server.Services;
 
 /// <summary>
@@ -40,4 +42,13 @@ public interface IFileSystemService
     /// Moves a file from source to destination.
     /// </summary>
     void MoveFile(string sourcePath, string destinationPath);
+
+    /// <summary>
+    /// Builds a directory map starting from the specified path, including subdirectories and files up to a certain depth to prevent excessive data transfer.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="depth"></param>
+    /// <returns></returns>
+    DirectoryNode BuildDirectoryMap(string path, int depth = 10);
+
 }

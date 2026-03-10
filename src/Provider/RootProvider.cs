@@ -29,18 +29,23 @@ internal class RootProvider
     /// </summary>
     public string Resolve(string relativePath)
     {
-        relativePath ??= "";
+        if(relativePath == "") return _root;
 
         var combined = Path.Combine(_root, relativePath);
 
         var fullPath = Path.GetFullPath(combined);
 
-        if (!fullPath.StartsWith(_root, StringComparison.OrdinalIgnoreCase))
+        if (!fullPath.StartsWith(_root, StringComparison.OrdinalIgnoreCase) || fullPath.StartsWith(".."))
         {
             throw new UnauthorizedAccessException(
                 $"Path '{relativePath}' escapes the configured root directory.");
         }
 
         return fullPath;
+    }
+
+    public string GetRelativePath(string path)
+    {
+        return Path.GetRelativePath(RootPath, path);
     }
 }

@@ -18,7 +18,6 @@ internal class FileSystemTools
     {
         _fileSystemService = fileSystemService ?? throw new ArgumentNullException(nameof(fileSystemService));
         _rootProvider = rootProvider ?? throw new ArgumentNullException(nameof(rootProvider));
-        Console.WriteLine($"FileSystemTools initialized with root directory: {_rootProvider.RootPath}");
     }
 
     [McpServerTool]

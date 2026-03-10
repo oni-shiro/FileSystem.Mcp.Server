@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using FileSystem.Mcp.Server.Configuration;
 using FileSystem.Mcp.Server.Tools;
 using FileSystem.Mcp.Server.Services;
+using FileSystem.Mcp.Server.Resources;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Logging.AddConsole(config => config.LogToStandardErrorThreshold = LogLevel.Information);
@@ -24,7 +25,8 @@ builder.Services.AddUtilities();
 builder.Services
     .AddMcpServer()
     .WithStdioServerTransport()
-    .WithToolsFromAssembly();
+    .WithToolsFromAssembly()
+    .WithResources<FileSystemResource>();
 
 var app = builder.Build();
 
