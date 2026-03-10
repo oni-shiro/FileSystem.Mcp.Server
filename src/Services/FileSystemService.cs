@@ -5,19 +5,25 @@ namespace FileSystem.Mcp.Server.Services;
 internal class FileSystemService : IFileSystemService
 {
     private readonly RootProvider _rootProvider;
+    private readonly IFileReader _fileReader;
 
-    public FileSystemService(RootProvider rootProvider)
+    public FileSystemService(RootProvider rootProvider, IFileReader fileReader)
     {
         _rootProvider = rootProvider;
-        Console.WriteLine($"FileSystemService initialized with root directory: {_rootProvider.RootPath}");
+        _fileReader = fileReader;
     }
 
     public string ReadFile(string path)
     {
         string validatedPath = _rootProvider.Resolve(path);
-
         if (!File.Exists(validatedPath))
             throw new FileNotFoundException($"The file at path '{path}' was not found.");
+
+        string extension = Path.GetExtension(validatedPath).ToLowerInvariant();
+        if (extension == ".pdf")
+        {
+            return _fileReader.ReadPdf(validatedPath);
+        }
 
         return File.ReadAllText(validatedPath);
     }

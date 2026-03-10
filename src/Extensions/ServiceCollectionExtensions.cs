@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<RootPathResolver>();
         services.AddSingleton<RootProvider>();
         services.AddSingleton<IFileSystemService, FileSystemService>();
+        services.AddSingleton<IFileReader, PdfReader>();
 
         return services;
     }

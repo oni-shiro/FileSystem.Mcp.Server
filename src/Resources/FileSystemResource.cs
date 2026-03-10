@@ -41,4 +41,31 @@ internal class FileSystemResource
             Text = JsonSerializer.Serialize(directoryNode, new JsonSerializerOptions { WriteIndented = true })
         };
     }
+
+    [McpServerResource(
+        UriTemplate = "fs://lens/{filePath}",
+        Name = "GetFileContents",
+        MimeType = "text/plain"
+    )]
+    [Description("Returns the contents of the specified file as plain text. The filePath parameter should be a relative path from the root directory. For example, if the root directory is 'C:/Files' and you want to access 'C:/Files/Documents/report.txt', you would use 'Documents/report.txt' as the filePath. Don't always need to use this, you can also use the 'fs://root/directoryMap' endpoint to explore the directory structure and find the exact path to the file you want to access.")]
+    public TextResourceContents TryGetFileContents(string filePath)
+    {
+        try
+        {
+
+            var fullPath = _rootPathResolver.Resolve(filePath);
+            var fileContents = _fileSystemService.ReadFile(fullPath);
+
+            return new TextResourceContents
+            {
+                Uri = $"fs://lens/file?path={filePath}",
+                MimeType = "text/markdown",
+                Text = fileContents
+            };
+        }
+        catch(Exception ex)
+        {
+            throw new InvalidOperationException($"Error accessing file at path '{filePath}': {ex.Message}", ex);
+        }
+    }
 }
