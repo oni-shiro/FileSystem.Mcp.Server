@@ -21,7 +21,6 @@ builder.Services.Configure<AppConfig>(builder.Configuration);
 builder.Services.AddFileSystemService();
 builder.Services.AddBatchFileOperationService();
 builder.Services.AddUtilities();
-builder.Services.AddMcpResources();
 
 builder.Services
     .AddMcpServer()

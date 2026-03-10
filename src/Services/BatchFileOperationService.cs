@@ -50,7 +50,6 @@ internal class BatchFileOperationService : IBatchFileOperationService
         // Build dependency graph for ordering
         var operationDict = operationList.ToDictionary(op => op.Id);
         var executionOrder = _executionOrderUtil.SortOperationsByDependencies(operationList);
-        Console.WriteLine($"Execution order: {string.Join(", ", executionOrder)}");
 
         foreach (var operationId in executionOrder)
         {

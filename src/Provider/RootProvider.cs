@@ -35,11 +35,11 @@ internal class RootProvider
 
         var fullPath = Path.GetFullPath(combined);
 
-        // if (!fullPath.StartsWith(_root, StringComparison.OrdinalIgnoreCase) || !fullPath.StartsWith(".."))
-        // {
-        //     throw new UnauthorizedAccessException(
-        //         $"Path '{relativePath}' escapes the configured root directory.");
-        // }
+        if (!fullPath.StartsWith(_root, StringComparison.OrdinalIgnoreCase) || fullPath.StartsWith(".."))
+        {
+            throw new UnauthorizedAccessException(
+                $"Path '{relativePath}' escapes the configured root directory.");
+        }
 
         return fullPath;
     }

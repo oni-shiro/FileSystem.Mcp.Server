@@ -1,4 +1,3 @@
-using FileSystem.Mcp.Server.Resolver;
 using FileSystem.Mcp.Server.Resources;
 using FileSystem.Mcp.Server.Services;
 using FileSystem.Mcp.Server.Utils;
@@ -14,7 +13,6 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddFileSystemService(
         this IServiceCollection services)
     {
-        services.AddSingleton<RootPathResolver>();
         services.AddSingleton<RootProvider>();
         services.AddSingleton<IFileSystemService, FileSystemService>();
         services.AddSingleton<IFileReader, PdfReader>();

@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Text.Json;
-using FileSystem.Mcp.Server.Resolver;
 using FileSystem.Mcp.Server.Services;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -11,17 +10,13 @@ namespace FileSystem.Mcp.Server.Resources;
 internal class FileSystemResource
 {
     private readonly IFileSystemService _fileSystemService;
-    private readonly RootPathResolver _rootPathResolver;
     private readonly RootProvider _rootProvider;
-    private const int MaxDepth = 10;
+    private const int MaxDepth = 5;
 
-    public FileSystemResource(IFileSystemService fileSystemService, RootPathResolver rootPathResolver, RootProvider rootProvider)
+    public FileSystemResource(IFileSystemService fileSystemService, RootProvider rootProvider)
     {
         _fileSystemService = fileSystemService;
-        _rootPathResolver = rootPathResolver;
         _rootProvider = rootProvider;
-
-        Console.WriteLine(_fileSystemService.BuildDirectoryMap(_rootProvider.RootPath, 4).ToString());
     }
 
     [McpServerResource(
@@ -29,7 +24,7 @@ internal class FileSystemResource
         Name = "GetDirectoryMap",
         MimeType = "application/json"
     )]
-    [Description("Returns a JSON representation of the directory structure starting from the root path. This only includes files and directories up to a depth of 10 levels to prevent excessive data transfer.")]
+    [Description("Returns a JSON representation of the directory structure starting from the root path. This only includes files and directories up to a depth of 5 levels to prevent excessive data transfer.")]
     public TextResourceContents TryGetDirectoryMap()
     {
         var directoryNode = _fileSystemService.BuildDirectoryMap(_rootProvider.RootPath, MaxDepth);
@@ -53,7 +48,7 @@ internal class FileSystemResource
         try
         {
 
-            var fullPath = _rootPathResolver.Resolve(filePath);
+            var fullPath = _rootProvider.Resolve(filePath);
             var fileContents = _fileSystemService.ReadFile(fullPath);
 
             return new TextResourceContents
